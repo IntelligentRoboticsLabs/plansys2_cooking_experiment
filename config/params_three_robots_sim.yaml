@@ -1,0 +1,102 @@
+move_1:
+  ros__parameters:
+    specialized_arguments: ["r2d2"]
+    plugins:
+      - plansys2_movef_bt_node
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]
+transport_1:
+  ros__parameters:
+    specialized_arguments: ["r2d2"]
+    plugins:
+      - plansys2_close_gripper_bt_node
+      - plansys2_open_gripper_bt_node
+      - plansys2_movef_bt_node
+      - plansys2_approach_object_bt_node
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]
+
+recharge_1:
+  ros__parameters:
+    specialized_arguments: ["r2d2"]
+    plugins:
+      - plansys2_recharge_bt_node
+
+move_2:
+  ros__parameters:
+    specialized_arguments: ["c3po"]
+    plugins:
+      - plansys2_movef_bt_node
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]
+transport_2:
+  ros__parameters:
+    specialized_arguments: ["c3po"]
+    plugins:
+      - plansys2_close_gripper_bt_node
+      - plansys2_open_gripper_bt_node
+      - plansys2_movef_bt_node
+      - plansys2_approach_object_bt_node
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]
+
+recharge_2:
+  ros__parameters:
+    specialized_arguments: ["c3po"]
+    plugins:
+      - plansys2_recharge_bt_node
+  
+move_3:
+  ros__parameters:
+    specialized_arguments: ["bb8"]
+    plugins:
+      - plansys2_movef_bt_node
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]
+transport_3:
+  ros__parameters:
+    specialized_arguments: ["bb8"]
+    plugins:
+      - plansys2_close_gripper_bt_node
+      - plansys2_open_gripper_bt_node
+      - plansys2_movef_bt_node
+      - plansys2_approach_object_bt_node
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]
+
+recharge_3:
+  ros__parameters:
+    specialized_arguments: ["bb8"]
+    plugins:
+      - plansys2_recharge_bt_node
+  
