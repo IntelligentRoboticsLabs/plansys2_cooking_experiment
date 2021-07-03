@@ -14,6 +14,7 @@
 
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include "plansys2_cooking_example/behavior_tree_nodes/Recharge.hpp"
 

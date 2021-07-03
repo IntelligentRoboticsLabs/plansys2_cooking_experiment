@@ -38,7 +38,7 @@ private:
       progress_ += 0.05;
       send_feedback(progress_, "Cooking cake running");
 
-      std::cout << "Cooking " << progress_* 100.0 << "\%" << std::endl;
+      std::cout << "Cooking " << progress_* 100.0 << "\\%" << std::endl;
 
 
     } else {
@@ -48,9 +48,9 @@ private:
       std::cout << std::endl;
     }
 
-    //std::cout << "\r\e[K" << std::flush;
-    //std::cout << "Cooking cake ... [" << std::min(100.0, progress_ * 100.0) << "%]  " <<
-    //  std::flush;
+    // std::cout << "\r\e[K" << std::flush;
+    // std::cout << "Cooking cake ... [" << std::min(100.0, progress_ * 100.0) << "%]  " <<
+    // std::flush;
   }
 
   float progress_;

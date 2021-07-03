@@ -65,7 +65,7 @@ public:
         parser::pddl::toString(problem_expert_->getGoal()));
       return;
     }
-  
+
     if (!executor_client_->start_plan_execution(plan.value())) {
       RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
     }
@@ -116,7 +116,7 @@ public:
       {
       case 1:  // omelette
         std::cerr << "*                 I will cook an omelette                  *" << std::endl;
-        
+
         problem_expert_->addInstance(plansys2::Instance{"eggs", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"oil", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"salt", "ingredient"});
@@ -218,7 +218,6 @@ public:
     // RCLCPP_INFO(get_logger(), "Battery level = [%lf]", battery_level_["r2d2"]);
 
     if (!executor_client_->execute_and_check_plan()) {
-
       auto result = executor_client_->getResult();
       if (result.has_value()) {
 
@@ -231,9 +230,7 @@ public:
            std::cerr << "************************************************************" << std::endl;
            std::cerr << "*                    Plan FAILED... REPLANNING    !!       *" << std::endl;
            std::cerr << "************************************************************" << std::endl;
-
         }
-
 
         for (const auto & action_info : result.value().action_execution_status) {
                     std::string args;
@@ -316,7 +313,9 @@ public:
             args = args + " " + arg;
           }
 
-          if (!charged_ && action_info.action == "recharge" && status_to_string(action_info.status)== "SUCCEEDED") {
+          if (!charged_ && action_info.action == "recharge" &&
+            status_to_string(action_info.status)== "SUCCEEDED")
+          {
             charged_ = true;
             battery_level_["r2d2"] = 100.0;
           }

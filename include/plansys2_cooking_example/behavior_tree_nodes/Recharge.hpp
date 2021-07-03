@@ -16,6 +16,7 @@
 #define PLANSYS2_COOKING_EXAMPLE__BEHAVIOR_TREE_NODES__RECHARGE_HPP_
 
 #include <string>
+#include <memory>
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"

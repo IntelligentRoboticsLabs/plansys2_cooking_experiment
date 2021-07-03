@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #include <chrono>
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -65,12 +69,8 @@ public:
     }
 }
 
-
-
 void timer_callback()
 {
-
-
   int counter = 0;
   visualization_msgs::msg::MarkerArray msg;
   for (const auto & wp : waypoints_) {
@@ -110,9 +110,9 @@ int main(int argc, char * argv[])
   rclcpp::executors::MultiThreadedExecutor executor;
 
   executor.add_node(node);
- 
+
   executor.spin();
-  
+
   rclcpp::shutdown();
 
   return 0;
