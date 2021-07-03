@@ -19,6 +19,9 @@
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 
+#include "plansys2_problem_expert/ProblemExpertClient.hpp"
+#include "rclcpp/rclcpp.hpp"
+
 namespace plansys2_cooking_example
 {
 
@@ -27,22 +30,24 @@ Recharge::Recharge(
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(xml_tag_name, conf), counter_(0)
 {
+  problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
 }
 
 void
 Recharge::halt()
 {
-  std::cout << "Recharge halt" << std::endl;
+  std::cout << "STARTING Recharge " << std::endl;
 }
 
 BT::NodeStatus
 Recharge::tick()
 {
-  std::cout << "Recharge tick " << counter_ << std::endl;
+  std::cout << "Recharge " << counter_ << "/ 100" << std::endl;
 
   if (counter_++ < 100) {
     return BT::NodeStatus::RUNNING;
   } else {
+    problem_expert_->addPredicate(plansys2::Predicate("(battery_full r2d2)"));
     counter_ = 0;
     return BT::NodeStatus::SUCCESS;
   }

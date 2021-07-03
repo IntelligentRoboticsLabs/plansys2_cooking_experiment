@@ -21,7 +21,9 @@
 
 #include "plansys2_msgs/msg/action_execution_info.hpp"
 
+#include "plansys2_domain_expert/DomainExpertClient.hpp"
 #include "plansys2_executor/ExecutorClient.hpp"
+#include "plansys2_planner/PlannerClient.hpp"
 #include "plansys2_problem_expert/ProblemExpertClient.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -41,8 +43,10 @@ public:
 
   void init()
   {
-    problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>(shared_from_this());
-    executor_client_ = std::make_shared<plansys2::ExecutorClient>(shared_from_this());
+    domain_expert_ = std::make_shared<plansys2::DomainExpertClient>();
+    planner_client_ = std::make_shared<plansys2::PlannerClient>();
+    problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
+    executor_client_ = std::make_shared<plansys2::ExecutorClient>();
 
     init_knowledge();
     generate_new_mission();
@@ -60,7 +64,17 @@ public:
       plansys2::Predicate("(robot_at bb8 " + robot_location_["bb8"] +")"));
     problem_expert_->addPredicate(plansys2::Predicate("(battery_full bb8)"));
 
-    if (!executor_client_->start_plan_execution()) {
+    auto domain = domain_expert_->getDomain();
+    auto problem = problem_expert_->getProblem();
+    auto plan = planner_client_->getPlan(domain, problem);
+
+    if (!plan.has_value()) {
+      std::cout << "Could not find plan to reach goal " <<
+        parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+      return;
+    }
+
+    if (!executor_client_->start_plan_execution(plan.value())) {
       RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
     }
   }
@@ -208,7 +222,7 @@ public:
 
       auto result = executor_client_->getResult();
       if (result.has_value()) {
-        RCLCPP_INFO_STREAM(get_logger(), "Plan succesful: " << result.value().success);
+        // RCLCPP_INFO_STREAM(get_logger(), "Plan succesful: " << result.value().success);
         for (const auto & action_info : result.value().action_execution_status) {
                     std::string args;
           rclcpp::Time start_stamp = action_info.start_stamp;
@@ -233,7 +247,7 @@ public:
       bool found_r2d2 = false;
       bool found_c3po = false;
       bool found_bb8 = false;
-      std::vector<parser::pddl::tree::Predicate> predicates = problem_expert_->getPredicates();
+      std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
       for (const auto & predicate : predicates) {
         if (predicate.name == "robot_at" && predicate.parameters[1].name == "r2d2") {
          found_r2d2 = true;
@@ -265,12 +279,20 @@ public:
           plansys2::Predicate("(robot_at bb8 " + robot_location_["bb8"] +")"));
       }
 
-      if (!executor_client_->start_plan_execution()) {
-        RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
+      auto domain = domain_expert_->getDomain();
+      auto problem = problem_expert_->getProblem();
+      auto plan = planner_client_->getPlan(domain, problem);
+
+      if (!plan.has_value()) {
+        std::cout << "Could not find plan to reach goal " <<
+          parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
       }
 
+      if (!executor_client_->start_plan_execution(plan.value())) {
+        RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
+      }
     } else {
-      std::vector<parser::pddl::tree::Predicate> predicates = problem_expert_->getPredicates();
+      std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
       for (const auto & predicate : predicates) {
         if (predicate.name == "robot_at"  && predicate.parameters[1].name == "r2d2") {
           robot_location_["r2d2"] = predicate.parameters[1].name;
@@ -332,6 +354,8 @@ public:
   }
 
 private:
+  std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
+  std::shared_ptr<plansys2::PlannerClient> planner_client_;
   std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
   std::shared_ptr<plansys2::ExecutorClient> executor_client_;
 

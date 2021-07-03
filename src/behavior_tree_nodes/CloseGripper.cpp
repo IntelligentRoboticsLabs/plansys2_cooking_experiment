@@ -27,6 +27,7 @@ CloseGripper::CloseGripper(
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(xml_tag_name, conf), counter_(0)
 {
+  std::cout << "STARTING CloseGripper " << std::endl;
 }
 
 void
@@ -38,7 +39,7 @@ CloseGripper::halt()
 BT::NodeStatus
 CloseGripper::tick()
 {
-  std::cout << "CloseGripper tick " << counter_ << std::endl;
+  std::cout << "CloseGripper " << counter_ << "/ 5" << std::endl;
 
   if (counter_++ < 5) {
     return BT::NodeStatus::RUNNING;

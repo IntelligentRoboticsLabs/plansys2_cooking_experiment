@@ -40,7 +40,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('plansys2_bringup'),
             'launch',
-            'plansys2_bringup_launch_monolithic.py')),
+            'plansys2_bringup_monolithic_launch.py')),
         launch_arguments={
           'model_file': example_dir + '/pddl/cooking_domain.pddl',
           'namespace': namespace

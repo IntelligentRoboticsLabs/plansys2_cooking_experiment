@@ -20,6 +20,9 @@
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
 
+#include "plansys2_problem_expert/ProblemExpertClient.hpp"
+#include "rclcpp/rclcpp.hpp"
+
 namespace plansys2_cooking_example
 {
 
@@ -40,6 +43,8 @@ public:
 
 private:
   int counter_;
+  rclcpp::Node::SharedPtr node_;
+  std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
 };
 
 }  // namespace plansys2_cooking_example

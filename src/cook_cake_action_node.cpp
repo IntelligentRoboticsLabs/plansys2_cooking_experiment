@@ -37,16 +37,20 @@ private:
     if (progress_ < 1.0) {
       progress_ += 0.05;
       send_feedback(progress_, "Cooking cake running");
+
+      std::cout << "Cooking " << progress_* 100.0 << "\%" << std::endl;
+
+
     } else {
-      finish(true, 1.0, "Cooking cake completed");
+      finish(true, 1.0, "Cooking completed");
 
       progress_ = 0.0;
       std::cout << std::endl;
     }
 
-    std::cout << "\r\e[K" << std::flush;
-    std::cout << "Cooking cake ... [" << std::min(100.0, progress_ * 100.0) << "%]  " <<
-      std::flush;
+    //std::cout << "\r\e[K" << std::flush;
+    //std::cout << "Cooking cake ... [" << std::min(100.0, progress_ * 100.0) << "%]  " <<
+    //  std::flush;
   }
 
   float progress_;

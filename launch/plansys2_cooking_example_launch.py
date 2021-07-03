@@ -40,7 +40,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('plansys2_bringup'),
             'launch',
-            'plansys2_bringup_launch_monolithic.py')),
+            'plansys2_bringup_monolithic_launch.py')),
         launch_arguments={
           'model_file': example_dir + '/pddl/cooking_domain.pddl',
           'namespace': namespace
@@ -112,6 +112,16 @@ def generate_launch_description():
         output='screen',
         parameters=[])   # Create the launch description and populate
 
+    marker_cmd = Node(
+        package='plansys2_cooking_example',
+        executable='marker_pub',
+        name='marker_pub',
+        namespace=namespace,
+        output='screen',
+        parameters=[
+          example_dir + '/config/params.yaml'
+        ])   # Create the launch description and populate
+
 
     ld = LaunchDescription()
 
@@ -128,5 +138,7 @@ def generate_launch_description():
     ld.add_action(cook_omelette_1_cmd)
     ld.add_action(cook_cake_1_cmd)
     ld.add_action(cook_spaghetti_1_cmd)
-  
+
+    ld.add_action(marker_cmd)
+
     return ld

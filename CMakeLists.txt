@@ -12,6 +12,7 @@ find_package(plansys2_msgs REQUIRED)
 find_package(plansys2_executor REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(plansys2_bt_actions REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -27,6 +28,7 @@ set(dependencies
     plansys2_executor
     ament_index_cpp
     plansys2_bt_actions
+    visualization_msgs
 )
 
 include_directories(include)
@@ -71,6 +73,8 @@ add_executable(cooking_controller_node_three_robots_sim
   src/cooking_controller_node_three_robots_sim.cpp)
 ament_target_dependencies(cooking_controller_node_three_robots_sim ${dependencies})
 
+add_executable(marker_pub src/marker_pub.cpp)
+ament_target_dependencies(marker_pub ${dependencies})
 
 add_executable(nav2_sim_node src/nav2_sim_node.cpp)
 ament_target_dependencies(nav2_sim_node ${dependencies})
@@ -86,6 +90,7 @@ install(TARGETS
   cooking_controller_node
   cooking_controller_node_three_robots_sim
   nav2_sim_node
+  marker_pub
   ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

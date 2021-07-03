@@ -21,7 +21,9 @@
 
 #include "plansys2_msgs/msg/action_execution_info.hpp"
 
+#include "plansys2_domain_expert/DomainExpertClient.hpp"
 #include "plansys2_executor/ExecutorClient.hpp"
+#include "plansys2_planner/PlannerClient.hpp"
 #include "plansys2_problem_expert/ProblemExpertClient.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -41,8 +43,10 @@ public:
 
   void init()
   {
-    problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>(shared_from_this());
-    executor_client_ = std::make_shared<plansys2::ExecutorClient>(shared_from_this());
+    domain_expert_ = std::make_shared<plansys2::DomainExpertClient>();
+    planner_client_ = std::make_shared<plansys2::PlannerClient>();
+    problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
+    executor_client_ = std::make_shared<plansys2::ExecutorClient>();
 
     init_knowledge();
     generate_new_mission();
@@ -52,7 +56,17 @@ public:
       plansys2::Predicate("(robot_at r2d2 " + robot_location_["r2d2"] +")"));
     problem_expert_->addPredicate(plansys2::Predicate("(battery_full r2d2)"));
 
-    if (!executor_client_->start_plan_execution()) {
+    auto domain = domain_expert_->getDomain();
+    auto problem = problem_expert_->getProblem();
+    auto plan = planner_client_->getPlan(domain, problem);
+
+    if (!plan.has_value()) {
+      RCLCPP_ERROR_STREAM(get_logger(), "Could not find plan to reach goal " <<
+        parser::pddl::toString(problem_expert_->getGoal()));
+      return;
+    }
+  
+    if (!executor_client_->start_plan_execution(plan.value())) {
       RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
     }
   }
@@ -60,13 +74,17 @@ public:
   void init_knowledge()
   {
     problem_expert_->addInstance(plansys2::Instance{"r2d2", "robot"});
+    if (battery_level_["r2d2"] > 10.0) {
+      problem_expert_->addPredicate(plansys2::Predicate("(battery_full r2d2)"));
+    }
+
     problem_expert_->addInstance(plansys2::Instance{"fridge_zone", "zone"});
     problem_expert_->addInstance(plansys2::Instance{"pantry_zone", "zone"});
     problem_expert_->addInstance(plansys2::Instance{"watertap_zone", "zone"});
     problem_expert_->addInstance(plansys2::Instance{"cooking_zone", "zone"});
     problem_expert_->addInstance(plansys2::Instance{"recharge_zone", "zone"});
 
-    problem_expert_->addPredicate(plansys2::Predicate("(battery_full r2d2)"));
+    // problem_expert_->addPredicate(plansys2::Predicate("(battery_full r2d2)"));
     problem_expert_->addPredicate(plansys2::Predicate("(is_cooking_zone cooking_zone)"));
     problem_expert_->addPredicate(plansys2::Predicate("(is_fridge_zone fridge_zone)"));
     problem_expert_->addPredicate(plansys2::Predicate("(is_fridge_zone fridge_zone)"));
@@ -80,6 +98,11 @@ public:
 
     std::vector<std::string> goals(num_dishes, "");
     std::list<int> used_dishes;
+
+    std::cerr << "************************************************************" << std::endl;
+    std::cerr << "*                                                           " << std::endl;
+
+
     for (int i = 0; i < num_dishes; i++) {
       int new_dish = distribution_dish_(generator_);
       while (std::find(used_dishes.begin(), used_dishes.end(), new_dish) != used_dishes.end()) {
@@ -88,10 +111,12 @@ public:
 
       used_dishes.push_back(new_dish);
 
+
       switch (new_dish)
       {
       case 1:  // omelette
-        RCLCPP_INFO_STREAM(get_logger(), "\tI will cock an omelette");
+        std::cerr << "*                 I will cook an omelette                  *" << std::endl;
+        
         problem_expert_->addInstance(plansys2::Instance{"eggs", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"oil", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"salt", "ingredient"});
@@ -107,7 +132,7 @@ public:
         goals[i] = "(dish_prepared omelette)";
         break;
       case 2:  // cake
-        RCLCPP_INFO_STREAM(get_logger(), "\tI will cock a cake");
+        std::cerr << "*                 I will cook an cake                      *" << std::endl;
         problem_expert_->addInstance(plansys2::Instance{"eggs", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"flour", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"sugar", "ingredient"});
@@ -120,11 +145,15 @@ public:
         problem_expert_->addPredicate(plansys2::Predicate("(is_sugar sugar)"));
         problem_expert_->addPredicate(plansys2::Predicate("(is_cake cake)"));
 
+
         goals[i] = "(dish_prepared cake)";
         break;
 
       case 3:  // cake
-        RCLCPP_INFO_STREAM(get_logger(), "\tI will cock spaghetti");
+
+        std::cerr << "*                 I will cook an spaghetti                 *" << std::endl;
+
+        // RCLCPP_INFO_STREAM(get_logger(), "\tI will cock spaghetti");
         problem_expert_->addInstance(plansys2::Instance{"pasta", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"water", "ingredient"});
         problem_expert_->addInstance(plansys2::Instance{"oil", "ingredient"});
@@ -148,6 +177,8 @@ public:
         break;
       }
     }
+    std::cerr << "*                                                           " << std::endl;
+    std::cerr << "************************************************************" << std::endl;
 
     std::string goal_instr = "(and";
     for (const auto & goal : goals) {
@@ -184,14 +215,26 @@ public:
   void step()
   {
     battery_level_["r2d2"] = battery_level_["r2d2"] - 0.1;
-    RCLCPP_INFO(get_logger(), "Battery level = [%lf]", battery_level_["r2d2"]);
+    // RCLCPP_INFO(get_logger(), "Battery level = [%lf]", battery_level_["r2d2"]);
 
     if (!executor_client_->execute_and_check_plan()) {
-      RCLCPP_INFO(get_logger(), "========================= PLAN FINISHED ==================");
 
       auto result = executor_client_->getResult();
       if (result.has_value()) {
-        RCLCPP_INFO_STREAM(get_logger(), "Plan succesful: " << result.value().success);
+
+        if (result.value().success) {
+           std::cerr << "************************************************************" << std::endl;
+           std::cerr << "*                    Plan SUCCESFUL !!                     *" << std::endl;
+           std::cerr << "************************************************************" << std::endl;
+
+        } else {
+           std::cerr << "************************************************************" << std::endl;
+           std::cerr << "*                    Plan FAILED... REPLANNING    !!       *" << std::endl;
+           std::cerr << "************************************************************" << std::endl;
+
+        }
+
+
         for (const auto & action_info : result.value().action_execution_status) {
                     std::string args;
           rclcpp::Time start_stamp = action_info.start_stamp;
@@ -199,10 +242,9 @@ public:
           for (const auto & arg : action_info.arguments) {
             args = args + " " + arg;
           }
-          RCLCPP_INFO_STREAM(
-            get_logger(), "Action: " << action_info.action << args << " " <<
-            status_to_string(action_info.status) << " " <<
-            status_stamp - start_stamp).seconds() << " secs");
+          std::cerr <<  "Action: " << action_info.action << args << "\t" <<
+            status_to_string(action_info.status) << "\t" <<
+            (status_stamp - start_stamp).seconds() << " secs" << std::endl;
         }
       } else {
         RCLCPP_WARN(get_logger(), "No result for this plan");
@@ -214,7 +256,7 @@ public:
 
 
       bool found_r2d2 = false;
-      std::vector<parser::pddl::tree::Predicate> predicates = problem_expert_->getPredicates();
+      std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
       for (const auto & predicate : predicates) {
         if (predicate.name == "robot_at" && predicate.parameters[1].name == "r2d2") {
          found_r2d2 = true;
@@ -222,18 +264,29 @@ public:
       }
 
       if (!found_r2d2) {
-        RCLCPP_INFO_STREAM(
-          get_logger(), "Restoring robot location to [" << robot_location_["r2d2"] + "]");
+        // RCLCPP_INFO_STREAM(
+        //   get_logger(), "Restoring robot location to [" << robot_location_["r2d2"] + "]");
         problem_expert_->addPredicate(
           plansys2::Predicate("(robot_at r2d2 " + robot_location_["r2d2"] +")"));
       }
 
-      if (!executor_client_->start_plan_execution()) {
-        RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
+
+      auto domain = domain_expert_->getDomain();
+      auto problem = problem_expert_->getProblem();
+      auto plan = planner_client_->getPlan(domain, problem);
+
+      if (!plan.has_value()) {
+        std::cout << "Could not find plan to reach goal " <<
+          parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+        return;
+      }
+
+      if (!executor_client_->start_plan_execution(plan.value())) {
+        // RCLCPP_ERROR(get_logger(), "Error starting a new plan (first)");
       }
 
     } else {
-      std::vector<parser::pddl::tree::Predicate> predicates = problem_expert_->getPredicates();
+      std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
       for (const auto & predicate : predicates) {
         if (predicate.name == "robot_at"  && predicate.parameters[1].name == "r2d2") {
           robot_location_["r2d2"] = predicate.parameters[1].name;
@@ -243,16 +296,18 @@ public:
 
       auto feedback = executor_client_->getFeedBack();
 
-      RCLCPP_INFO_STREAM(get_logger(), "--------------------------------------------------------");
       if (!feedback.action_execution_status.empty() && battery_level_["r2d2"] < 10.0) {
         problem_expert_->removePredicate(plansys2::Predicate("(battery_full r2d2)"));
-        RCLCPP_INFO(get_logger(), "**********************************************************");
-        RCLCPP_INFO(get_logger(), "********************** BATTERY LOW r2d2 ******************");
-        RCLCPP_INFO(get_logger(), "**********************************************************");
+        std::cerr << "**********************************************************" << std::endl;
+        std::cerr << "*                    BATTERY LOW r2d2                    *" << std::endl;
+        std::cerr << "**********************************************************" << std::endl;
 
-        battery_level_["r2d2"] = 100.0;
+        charged_ = false;
+        // battery_level_["r2d2"] = 100.0;
       }
 
+    std::cerr << "==========================================================" << std::endl;
+    std::cerr << "Battery level = [" << battery_level_["r2d2"] << "]" << std::endl;
       for (const auto & action_info : feedback.action_execution_status) {
           std::string args;
           rclcpp::Time start_stamp = action_info.start_stamp;
@@ -260,11 +315,22 @@ public:
           for (const auto & arg : action_info.arguments) {
             args = args + " " + arg;
           }
+
+          if (!charged_ && action_info.action == "recharge" && status_to_string(action_info.status)== "SUCCEEDED") {
+            charged_ = true;
+            battery_level_["r2d2"] = 100.0;
+          }
+
+          std::cerr <<  "Action: " << action_info.action << args << "\t" <<
+            status_to_string(action_info.status) << "\t" <<
+            (status_stamp - start_stamp).seconds() << " secs" << std::endl;
       }
     }
   }
 
 private:
+  std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
+  std::shared_ptr<plansys2::PlannerClient> planner_client_;
   std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
   std::shared_ptr<plansys2::ExecutorClient> executor_client_;
 
@@ -273,7 +339,9 @@ private:
   std::uniform_int_distribution<int> distribution_num_dishes_;
 
   std::map<std::string, std::string> robot_location_;
-  std::map<std::string, double> battery_level_{{"r2d2", 100.0}};
+  std::map<std::string, double> battery_level_{{"r2d2", 40.0}};
+
+  bool charged_ {true};
 };
 
 int main(int argc, char ** argv)

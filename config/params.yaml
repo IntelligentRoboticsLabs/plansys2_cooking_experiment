@@ -28,4 +28,13 @@ recharge_1:
   ros__parameters:
     plugins:
       - plansys2_recharge_bt_node
-  
+
+marker_pub:
+  ros__parameters:
+    waypoints: ["fridge_zone", "pantry_zone", "watertap_zone", "cooking_zone", "recharge_zone"]
+    waypoint_coords:
+      fridge_zone: [6.64, -3.19, 0.907]
+      pantry_zone: [4.854, 1.747, 2.445]  
+      watertap_zone: [2.787, -0.328, -2.739]  
+      cooking_zone: [5.086, -1.380, 0.907]
+      recharge_zone: [8.758, -0.528, -2.891]

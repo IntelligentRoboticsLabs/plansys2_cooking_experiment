@@ -27,6 +27,7 @@ ApproachObject::ApproachObject(
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(xml_tag_name, conf), counter_(0)
 {
+  std::cout << "STARTING ApproachObject " << std::endl;
 }
 
 void
@@ -38,7 +39,7 @@ ApproachObject::halt()
 BT::NodeStatus
 ApproachObject::tick()
 {
-  std::cout << "ApproachObject tick " << counter_ << std::endl;
+  std::cout << "ApproachObject " << counter_ << "/ 10" << std::endl;
 
   if (counter_++ < 10) {
     return BT::NodeStatus::RUNNING;
